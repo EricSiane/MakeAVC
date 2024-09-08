@@ -29,37 +29,45 @@ async def on_voice_state_update(member, before, after):
     if after.channel and after.channel.id == TARGET_VOICE_CHANNEL_ID:
         # User joined the target voice channel
 
-        # Get the user's nickname or username
-        channel_name = member.nick if member.nick else member.name
+        # Check if the user already has a created channel
+        existing_channel = created_channels.get(member.id)
+        if existing_channel:
+            # If they do, move them to their existing channel
+            await member.move_to(existing_channel)
+            print(f"Moved {member.name} to their existing channel: {existing_channel.name}")
+        else:
 
-        # Check if the user is currently playing a game
-        game_name = ""
-        if member.activity and member.activity.type == discord.ActivityType.playing:
-            game_name = f" - {member.activity.name}"
+            # Get the user's nickname or username
+            channel_name = member.nick if member.nick else member.name
 
-        # Create an overwrite for the member with full permissions
-        overwrites = {
-            member: discord.PermissionOverwrite(
-                manage_channels=True,
-                manage_permissions=True,
-                view_channel=True,
-                connect=True,
-                speak=True,
-                mute_members=True,
-                deafen_members=True,
-                move_members=True,
-                # ... add other permissions as needed
+            # Check if the user is currently playing a game
+            game_name = ""
+            if member.activity and member.activity.type == discord.ActivityType.playing:
+                game_name = f" - {member.activity.name}"
+
+            # Create an overwrite for the member with full permissions
+            overwrites = {
+                member: discord.PermissionOverwrite(
+                    manage_channels=True,
+                    manage_permissions=True,
+                    view_channel=True,
+                    connect=True,
+                    speak=True,
+                    mute_members=True,
+                    deafen_members=True,
+                    move_members=True,
+                    # ... add other permissions as needed
+                )
+            }
+
+            new_channel = await after.channel.guild.create_voice_channel(
+                name=f"{channel_name}'s VC{game_name}",  # Include game_name if available
+                category=after.channel.category,
+                overwrites=overwrites
             )
-        }
-
-        new_channel = await after.channel.guild.create_voice_channel(
-            name=f"{channel_name}'s VC{game_name}",  # Include game_name if available
-            category=after.channel.category,
-            overwrites=overwrites
-        )
-        await member.move_to(new_channel)
-        created_channels[member.id] = new_channel
-        print(f"Created channel for {member.name}: {new_channel.name}")
+            await member.move_to(new_channel)
+            created_channels[member.id] = new_channel
+            print(f"Created channel for {member.name}: {new_channel.name}")
 
     elif before.channel: # User left a voice channel
         if len(before.channel.members) == 0 and before.channel.id in [channel.id for channel in created_channels.values()]:
