@@ -23,7 +23,7 @@ async def on_ready():
     print(f'Logged in as {bot.user}!')
 
 def get_channel_name(member):
-    """Gets the channel name based on member's nickname or username and activity."""
+    # Gets the channel name based on member's nickname or username and activity.
     channel_name = member.nick if member.nick else member.name
     game_name = ""
     if member.activity and member.activity.type == discord.ActivityType.playing:
@@ -31,7 +31,7 @@ def get_channel_name(member):
     return f"{channel_name}'s VC{game_name}"
 
 async def create_channel_for_user(member):
-    """Creates a new voice channel for the given member."""
+    #Creates a new voice channel for the given member.
     try:
         channel_name = get_channel_name(member)
         overwrites = {
@@ -66,7 +66,7 @@ async def create_channel_for_user(member):
         print(f"Error creating channel: {e}")
 
 async def delete_empty_channel(channel):
-    """Deletes the given channel if it's empty and created by the bot."""
+    # Deletes the given channel if it's empty and created by the bot.
     if len(channel.members) == 0:
         for user_id, user_channels in created_channels.items():
             if channel in user_channels:
